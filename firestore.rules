@@ -1,0 +1,171 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny all reads and writes by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HARDENED HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- VALIDATION BLUEPRINTS ---
+    function isValidDestination(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.platform is string && data.platform in ['YOUTUBE', 'FACEBOOK', 'INSTAGRAM', 'CUSTOM'] &&
+             data.label is string && data.label.size() >= 1 && data.label.size() <= 60 &&
+             data.rtmpUrl is string && data.rtmpUrl.size() >= 7 && data.rtmpUrl.size() <= 300 &&
+             data.rtmpUrl.matches('^rtmps?://.+') &&
+             data.streamKey is string && data.streamKey.size() <= 256 &&
+             data.enabled is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidSession(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.videoCount is int && data.videoCount >= 1 && data.videoCount <= 100 &&
+             data.platforms is list && data.platforms.size() >= 1 && data.platforms.size() <= 10 &&
+             data.platforms[0] is string && data.platforms[0].size() >= 1 && data.platforms[0].size() <= 60 &&
+             data.status is string && data.status in ['LIVE', 'COMPLETED', 'FAILED'] &&
+             data.durationSec is int && data.durationSec >= 0 && data.durationSec <= 604800 &&
+             data.avgBitrateKbps is int && data.avgBitrateKbps >= 0 && data.avgBitrateKbps <= 100000 &&
+             data.totalBytesSent is int && data.totalBytesSent >= 0 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidNewsPreset(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.channelName is string && data.channelName.size() >= 1 && data.channelName.size() <= 40 &&
+             data.locationTag is string && data.locationTag.size() <= 40 &&
+             data.breakingTag is string && data.breakingTag.size() >= 1 && data.breakingTag.size() <= 30 &&
+             data.headline is string && data.headline.size() <= 140 &&
+             data.tickerText is string && data.tickerText.size() <= 1000 &&
+             data.newsScript is string && data.newsScript.size() <= 4000 &&
+             data.ttsLanguage is string && data.ttsLanguage in ['BN', 'EN'] &&
+             data.ttsSpeed is number && data.ttsSpeed >= 0.5 && data.ttsSpeed <= 2.0 &&
+             data.ttsPitch is number && data.ttsPitch >= 0.5 && data.ttsPitch <= 2.0 &&
+             data.tickerSpeed is string && data.tickerSpeed in ['SLOW', 'NORMAL', 'FAST'] &&
+             data.newsModeEnabled is bool &&
+             data.ttsEnabled is bool &&
+             data.showLogo is bool &&
+             data.showTicker is bool &&
+             data.showHeadline is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // --- USER-SCOPED COLLECTIONS ---
+    match /users/{userId}/destinations/{destinationId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(destinationId);
+      allow list: if isOwner(userId) && isValidId(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidId(destinationId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'platform', 'label', 'rtmpUrl', 'streamKey', 'enabled', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'platform', 'label', 'rtmpUrl', 'streamKey', 'enabled', 'createdAt', 'updatedAt']) &&
+                       isValidDestination(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidId(destinationId) &&
+                       isValidDestination(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().platform == existing().platform &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         // Action 1: Edit destination settings
+                         incoming().diff(existing()).affectedKeys().hasOnly(['label', 'rtmpUrl', 'streamKey', 'enabled', 'updatedAt']) ||
+                         // Action 2: Toggle enabled switch
+                         incoming().diff(existing()).affectedKeys().hasOnly(['enabled', 'updatedAt'])
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(destinationId);
+    }
+
+    match /users/{userId}/sessions/{sessionId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(sessionId);
+      allow list: if isOwner(userId) && isValidId(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidId(sessionId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().status == 'LIVE' &&
+                       incoming().keys().hasAll(['userId', 'title', 'videoCount', 'platforms', 'status', 'durationSec', 'avgBitrateKbps', 'totalBytesSent', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'title', 'videoCount', 'platforms', 'status', 'durationSec', 'avgBitrateKbps', 'totalBytesSent', 'createdAt', 'updatedAt']) &&
+                       isValidSession(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidId(sessionId) &&
+                       isValidSession(incoming()) &&
+                       existing().status == 'LIVE' &&
+                       incoming().userId == existing().userId &&
+                       incoming().title == existing().title &&
+                       incoming().videoCount == existing().videoCount &&
+                       incoming().platforms == existing().platforms &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         // Action 1: Periodic live telemetry update
+                         (incoming().status == 'LIVE' && incoming().diff(existing()).affectedKeys().hasOnly(['durationSec', 'avgBitrateKbps', 'totalBytesSent', 'updatedAt'])) ||
+                         // Action 2: Finish or fail broadcast (terminal lock)
+                         (incoming().status in ['COMPLETED', 'FAILED'] && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'durationSec', 'avgBitrateKbps', 'totalBytesSent', 'updatedAt']))
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(sessionId);
+    }
+
+    match /users/{userId}/newsPresets/{presetId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(presetId);
+      allow list: if isOwner(userId) && isValidId(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidId(presetId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'channelName', 'locationTag', 'breakingTag', 'headline', 'tickerText', 'newsScript', 'ttsLanguage', 'ttsSpeed', 'ttsPitch', 'tickerSpeed', 'newsModeEnabled', 'ttsEnabled', 'showLogo', 'showTicker', 'showHeadline', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'channelName', 'locationTag', 'breakingTag', 'headline', 'tickerText', 'newsScript', 'ttsLanguage', 'ttsSpeed', 'ttsPitch', 'tickerSpeed', 'newsModeEnabled', 'ttsEnabled', 'showLogo', 'showTicker', 'showHeadline', 'createdAt', 'updatedAt']) &&
+                       isValidNewsPreset(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidId(presetId) &&
+                       isValidNewsPreset(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         // Action 1: Update full news desk bulletin & overlay settings
+                         incoming().diff(existing()).affectedKeys().hasOnly(['channelName', 'locationTag', 'breakingTag', 'headline', 'tickerText', 'newsScript', 'ttsLanguage', 'ttsSpeed', 'ttsPitch', 'tickerSpeed', 'newsModeEnabled', 'ttsEnabled', 'showLogo', 'showTicker', 'showHeadline', 'updatedAt']) ||
+                         // Action 2: Quick live update of headline/ticker/script on air
+                         incoming().diff(existing()).affectedKeys().hasOnly(['breakingTag', 'headline', 'tickerText', 'newsScript', 'updatedAt'])
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(presetId);
+    }
+  }
+}

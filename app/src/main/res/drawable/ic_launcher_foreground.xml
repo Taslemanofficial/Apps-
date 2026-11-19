@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer left broadcast arc (cyan-white) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M31,36 A26,26 0 0,0 31,72" />
+    <!-- Outer right broadcast arc (cyan-white) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M77,36 A26,26 0 0,1 77,72" />
+    <!-- Inner left broadcast arc (white) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F8FAFC"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M38.5,42 A17,17 0 0,0 38.5,66" />
+    <!-- Inner right broadcast arc (white) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F8FAFC"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M69.5,42 A17,17 0 0,1 69.5,66" />
+    <!-- Top signal arc (live crimson-coral accent) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF3B5C"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:pathData="M42,32 A19,19 0 0,1 66,32" />
+    <!-- Bold central live play core -->
+    <path
+        android:fillColor="#FF3B5C"
+        android:pathData="M47,42 L67,54 L47,66 Z" />
+</vector>

@@ -1,0 +1,6 @@
+{
+  "name": "StreamCast",
+  "description": "Real-time multi-platform live video broadcaster for YouTube, Facebook, and Instagram via RTMPS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

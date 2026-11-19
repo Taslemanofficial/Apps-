@@ -1,0 +1,235 @@
+{
+  "entities": {
+    "StreamDestination": {
+      "title": "StreamDestination",
+      "description": "A configured RTMP/RTMPS live streaming destination such as YouTube Live, Facebook Live, Instagram Live, or a custom ingest server.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owning creator."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["YOUTUBE", "FACEBOOK", "INSTAGRAM", "CUSTOM"],
+          "description": "Target streaming platform identifier."
+        },
+        "label": {
+          "type": "string",
+          "description": "Display name for this stream destination (1-60 chars)."
+        },
+        "rtmpUrl": {
+          "type": "string",
+          "description": "RTMP or RTMPS ingest server URL (7-300 chars)."
+        },
+        "streamKey": {
+          "type": "string",
+          "description": "Secret stream key issued by the target platform (0-256 chars)."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this destination is toggled on for simultaneous broadcast."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() upon creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on each update."
+        }
+      },
+      "required": [
+        "userId",
+        "platform",
+        "label",
+        "rtmpUrl",
+        "streamKey",
+        "enabled",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BroadcastSession": {
+      "title": "BroadcastSession",
+      "description": "A record of a multi-platform live broadcast session and its real-time telemetry summary.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owning creator."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the broadcast session (1-120 chars)."
+        },
+        "videoCount": {
+          "type": "integer",
+          "description": "Number of uploaded videos queued in this broadcast (1-100)."
+        },
+        "platforms": {
+          "type": "array",
+          "description": "List of platform identifiers targeted in this broadcast (1-10 items)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["LIVE", "COMPLETED", "FAILED"],
+          "description": "Lifecycle state of the broadcast session."
+        },
+        "durationSec": {
+          "type": "integer",
+          "description": "Elapsed broadcast duration in seconds."
+        },
+        "avgBitrateKbps": {
+          "type": "integer",
+          "description": "Average outbound bitrate in kbps."
+        },
+        "totalBytesSent": {
+          "type": "integer",
+          "description": "Total payload bytes transmitted across all platforms."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() upon creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on each update."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "videoCount",
+        "platforms",
+        "status",
+        "durationSec",
+        "avgBitrateKbps",
+        "totalBytesSent",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "NewsDeskPreset": {
+      "title": "NewsDeskPreset",
+      "description": "Saved news desk configuration and bulletin preset with channel branding, breaking headline, scrolling ticker, and TTS presenter script.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owning broadcaster."
+        },
+        "channelName": {
+          "type": "string",
+          "description": "News channel name displayed in the top broadcast bug (1-40 chars)."
+        },
+        "locationTag": {
+          "type": "string",
+          "description": "Optional city/desk location tag (0-40 chars)."
+        },
+        "breakingTag": {
+          "type": "string",
+          "description": "Lower-third category badge text (1-30 chars)."
+        },
+        "headline": {
+          "type": "string",
+          "description": "Primary breaking news headline displayed in the lower-third bar (0-140 chars)."
+        },
+        "tickerText": {
+          "type": "string",
+          "description": "Bottom continuously scrolling news ticker text (0-1000 chars)."
+        },
+        "newsScript": {
+          "type": "string",
+          "description": "Auto-read news presentation script for TTS narration (0-4000 chars)."
+        },
+        "ttsLanguage": {
+          "type": "string",
+          "enum": ["BN", "EN"],
+          "description": "Voice language code for the automated news presenter."
+        },
+        "ttsSpeed": {
+          "type": "number",
+          "description": "Speech rate multiplier (0.5 - 2.0)."
+        },
+        "ttsPitch": {
+          "type": "number",
+          "description": "Speech pitch multiplier (0.5 - 2.0)."
+        },
+        "tickerSpeed": {
+          "type": "string",
+          "enum": ["SLOW", "NORMAL", "FAST"],
+          "description": "Horizontal scroll speed preset for the bottom news ticker."
+        },
+        "newsModeEnabled": {
+          "type": "boolean",
+          "description": "Whether the TV news overlay compositor is active during broadcast."
+        },
+        "ttsEnabled": {
+          "type": "boolean",
+          "description": "Whether automated TTS news narration audio is mixed into the live stream."
+        },
+        "showLogo": {
+          "type": "boolean",
+          "description": "Whether the top channel logo and LIVE clock bug are visible."
+        },
+        "showTicker": {
+          "type": "boolean",
+          "description": "Whether the bottom scrolling news ticker is visible."
+        },
+        "showHeadline": {
+          "type": "boolean",
+          "description": "Whether the lower-third breaking news headline bar is visible."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() upon creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on each update."
+        }
+      },
+      "required": [
+        "userId",
+        "channelName",
+        "locationTag",
+        "breakingTag",
+        "headline",
+        "tickerText",
+        "newsScript",
+        "ttsLanguage",
+        "ttsSpeed",
+        "ttsPitch",
+        "tickerSpeed",
+        "newsModeEnabled",
+        "ttsEnabled",
+        "showLogo",
+        "showTicker",
+        "showHeadline",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/destinations/{destinationId}": {
+      "schema": { "$ref": "#/entities/StreamDestination" },
+      "description": "User-owned RTMP/RTMPS broadcast destinations for YouTube, Facebook, Instagram, and custom targets."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/BroadcastSession" },
+      "description": "User-owned multi-platform broadcast session history and live telemetry logs."
+    },
+    "/users/{userId}/newsPresets/{presetId}": {
+      "schema": { "$ref": "#/entities/NewsDeskPreset" },
+      "description": "User-owned news desk graphics settings, scrolling tickers, and automated TTS news bulletins."
+    }
+  }
+}
